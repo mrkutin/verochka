@@ -1,11 +1,21 @@
+const {BOT_TOKEN, BOT_DB_USER, BOT_DB_PASSWORD} = process.env
+const PouchDB = require('pouchdb')
 const { Telegraf } = require('telegraf')
+const bot = new Telegraf(BOT_TOKEN)
 
-const bot = new Telegraf(process.env.BOT_TOKEN)
-bot.command('oldschool', (ctx) => ctx.reply('Hello'))
-bot.command('hipster', Telegraf.reply('λ'))
-
-bot.on('message', ({tg, update: {message}}) => {
-    tg.sendMessage(message.chat.id, `${message.text} ${message.text}`)
+bot.on('message', async ({tg, update: {message}}) => {
+    try {
+        const db = new PouchDB(`http://localhost:5984/${message.chat.username}`, {
+            auth: {
+                username: BOT_DB_USER,
+                password: BOT_DB_PASSWORD
+            }
+        })
+        await db.post({ text: message.text })
+        tg.sendMessage(message.chat.id, 'Записала!')
+    } catch (e) {
+        console.error(e)
+    }
 })
 
 bot.launch()
