@@ -8,7 +8,7 @@ const bot = new Telegraf(BOT_TOKEN)
 
 const pendingUpdates = {}
 
-const getDb = async dbName => {
+const getDb = dbName => {
   if (!dbName) {
     return null
   }
@@ -20,9 +20,14 @@ const getDb = async dbName => {
     }
   })
 
-  await db.createIndex({
+  db.createIndex({
     index: {
-      // fields: ['text']
+      fields: ['text']
+    }
+  })
+
+  db.createIndex({
+    index: {
       fields: ['tags']
     }
   })
@@ -34,7 +39,7 @@ bot.on('callback_query', async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
   for (const id in data) {
     try {
-      const db = await getDb(ctx.update.callback_query.message.chat.username)
+      const db = getDb(ctx.update.callback_query.message.chat.username)
       if (!db) {
         continue
       }
@@ -50,8 +55,18 @@ bot.on('callback_query', async ctx => {
         case 'find':
           text = pendingUpdates[id]
           tags = text.split(' ')
-          // const records = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
-          const records = await db.find({selector: {tags: {$all: tags}}})
+
+          //todo order by date desc, limit 5
+          const records = await db.find(
+            {
+              selector: {
+                $or: [
+                  {tags: {$all: tags}},
+                  {text: {$regex: pendingUpdates[id]}}
+                ]
+              }
+            }
+          )
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
@@ -72,7 +87,9 @@ bot.on('callback_query', async ctx => {
               .resize()
           )
           break
-        case 'save':
+        case
+        'save'
+        :
           text = pendingUpdates[id]
           tags = text.split(' ')
           await db.post({
@@ -114,12 +131,14 @@ bot.on('message', async (ctx) => {
 
 bot.on('inline_query', async ctx => {
   try {
-    const db = await getDb(ctx.update.inline_query.from.username)
+    const db = getDb(ctx.update.inline_query.from.username)
     if (!db) {
       return
     }
 
+    //todo tags
     const records = await db.find({selector: {text: {$regex: ctx.update.inline_query.query}}})
+
     if (!records.docs.length) {
       return
     }
