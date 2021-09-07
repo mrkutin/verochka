@@ -8,39 +8,48 @@ const bot = new Telegraf(BOT_TOKEN)
 
 const pendingUpdates = {}
 
-const getDb = dbName => {
-  return new PouchDB(`http://localhost:5984/${dbName}`, {
+const getDb = async dbName => {
+  if (!dbName) {
+    return null
+  }
+
+  const db = new PouchDB(`http://localhost:5984/${dbName}`, {
     auth: {
       username: BOT_DB_USER,
       password: BOT_DB_PASSWORD
     }
   })
+
+  await db.createIndex({
+    index: {
+      fields: ['text']
+    }
+  })
+
+  return db
 }
 
 bot.on('callback_query', async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
   for (const id in data) {
     try {
-      //todo move under cases
-      const update = pendingUpdates[id]
-      if (!update.message) {
+      const db = await getDb(ctx.update.callback_query.message.chat.username)
+      if (!db) {
         continue
       }
-      const {message} = update
-      const db = getDb(message.chat.username)
 
       switch (data[id]) {
         case 'show':
-          //todo
-          break;
+          const doc = await db.get(id)
+          ctx.reply(doc.text)
+          break
         case 'find':
-          //todo index
-          const res = await db.find({selector: {text: {$regex: message.text}}})
+          const res = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
 
           if (!res.docs.length) {
-            ctx.reply('Нет такого')
-            //todo запишем?
+            ctx.reply('Ничего не нашла')
           }
+
           const inlineButtons = res.docs.map(doc => {
             return [{
               text: `📄 ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
@@ -57,7 +66,7 @@ bot.on('callback_query', async ctx => {
           break
         case 'save':
           await db.post({
-            text: message.text,
+            text: pendingUpdates[id],
             createdAt: new Date()
           })
           ctx.reply('Записала!')
@@ -75,7 +84,7 @@ bot.on('message', async (ctx) => {
   try {
     const {update} = ctx
     const {update_id} = update
-    pendingUpdates[update_id] = update
+    pendingUpdates[update_id] = update.message.text
     ctx.reply('Что с этим делать?',
       Markup
         .inlineKeyboard([
