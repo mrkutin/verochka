@@ -44,13 +44,13 @@ bot.on('callback_query', async ctx => {
           ctx.reply(doc.text)
           break
         case 'find':
-          const res = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
+          const records = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
 
-          if (!res.docs.length) {
+          if (!records.docs.length) {
             ctx.reply('Ничего не нашла')
           }
 
-          const inlineButtons = res.docs.map(doc => {
+          const inlineButtons = records.docs.map(doc => {
             return [{
               text: `📄 ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
               callback_data: JSON.stringify({[doc._id]: 'show'})
@@ -101,12 +101,32 @@ bot.on('message', async (ctx) => {
   }
 })
 
-//todo
-bot.on('inline_query', ctx => {
+bot.on('inline_query', async ctx => {
   try {
-    console.log()
+    const db = await getDb(ctx.update.inline_query.from.username)
+    if (!db) {
+      return
+    }
+
+    const records = await db.find({selector: {text: {$regex: ctx.update.inline_query.query}}})
+    if (!records.docs.length) {
+      return
+    }
+
+    const results = records.docs.map((record, idx) => {
+      return {
+        id: idx,
+        type: 'article',
+        title: record.text,
+        input_message_content: {
+          message_text: record.text
+        }
+      }
+    })
+
+    ctx.answerInlineQuery(results)
   } catch (err) {
-    console.log()
+    console.log(err)
   }
 })
 
