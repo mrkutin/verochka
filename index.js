@@ -7,7 +7,7 @@ const pendingUpdates = {}
 
 const {getDb, search} = require('./database')
 
-bot.on('message', async (ctx) => {
+bot.on('text', async (ctx) => {
   try {
     const {update} = ctx
     const {update_id} = update
@@ -28,7 +28,11 @@ bot.on('message', async (ctx) => {
   }
 })
 
-
+bot.on('photo', ctx => {
+  ctx.update.message.caption
+  ctx.update.message.photo
+  console.log()
+})
 
 bot.on('callback_query', async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
