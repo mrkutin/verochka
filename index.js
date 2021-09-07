@@ -47,7 +47,7 @@ bot.on('callback_query', async ctx => {
           const records = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
 
           if (!records.docs.length) {
-            ctx.reply('Ничего не нашла')
+            ctx.reply('Я ничего не нашла')
             return
           }
 
