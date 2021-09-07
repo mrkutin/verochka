@@ -48,6 +48,7 @@ bot.on('callback_query', async ctx => {
 
           if (!records.docs.length) {
             ctx.reply('Ничего не нашла')
+            return
           }
 
           const inlineButtons = records.docs.map(doc => {
