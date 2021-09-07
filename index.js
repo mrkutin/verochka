@@ -22,7 +22,8 @@ const getDb = async dbName => {
 
   await db.createIndex({
     index: {
-      fields: ['text']
+      // fields: ['text']
+      fields: ['tags']
     }
   })
 
@@ -38,13 +39,19 @@ bot.on('callback_query', async ctx => {
         continue
       }
 
+      let tags
+      let text
+
       switch (data[id]) {
         case 'show':
           const doc = await db.get(id)
           ctx.reply(doc.text)
           break
         case 'find':
-          const records = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
+          text = pendingUpdates[id]
+          tags = text.split(' ')
+          // const records = await db.find({selector: {text: {$regex: pendingUpdates[id]}}})
+          const records = await db.find({selector: {tags: {$all: tags}}})
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
@@ -66,8 +73,11 @@ bot.on('callback_query', async ctx => {
           )
           break
         case 'save':
+          text = pendingUpdates[id]
+          tags = text.split(' ')
           await db.post({
-            text: pendingUpdates[id],
+            text,
+            tags,
             createdAt: new Date()
           })
           ctx.reply('Записала!')
