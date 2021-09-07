@@ -32,7 +32,29 @@ const getDb = dbName => {
     }
   })
 
+  db.createIndex({
+    index: {
+      fields: ['createdAt']
+    }
+  })
+
   return db
+}
+
+const search = (db, text) => {
+  const tags = text.split(' ')
+  return db.find(
+      {
+        selector: {
+          $or: [
+            {tags: {$all: tags}},
+            {text: {$regex: text}}
+          ]
+        },
+        sort: [{createdAt: 'desc'}],
+        limit: 5
+      }
+  )
 }
 
 bot.on('callback_query', async ctx => {
@@ -53,20 +75,7 @@ bot.on('callback_query', async ctx => {
           ctx.reply(doc.text)
           break
         case 'find':
-          text = pendingUpdates[id]
-          tags = text.split(' ')
-
-          //todo order by date desc, limit 5
-          const records = await db.find(
-            {
-              selector: {
-                $or: [
-                  {tags: {$all: tags}},
-                  {text: {$regex: pendingUpdates[id]}}
-                ]
-              }
-            }
-          )
+          const records = await search(db, pendingUpdates[id])
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
@@ -136,8 +145,7 @@ bot.on('inline_query', async ctx => {
       return
     }
 
-    //todo tags
-    const records = await db.find({selector: {text: {$regex: ctx.update.inline_query.query}}})
+    const records = await search(db, ctx.update.inline_query.query)
 
     if (!records.docs.length) {
       return
