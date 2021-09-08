@@ -24,7 +24,7 @@ bot.on('text', async (ctx) => {
         .resize()
     )
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 })
 
@@ -84,7 +84,7 @@ bot.on('callback_query', async ctx => {
           break
       }
     } catch (err) {
-      console.log(err)
+      console.error(err)
     } finally {
       delete pendingUpdates[id]
     }
@@ -117,7 +117,7 @@ bot.on('inline_query', async ctx => {
 
     ctx.answerInlineQuery(results)
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 })
 
