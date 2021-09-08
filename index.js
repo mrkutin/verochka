@@ -3,6 +3,9 @@ const {BOT_TOKEN} = process.env
 const {Telegraf, Markup} = require('telegraf')
 const bot = new Telegraf(BOT_TOKEN)
 
+const https = require('https')
+const fs = require('fs')
+
 const pendingUpdates = {}
 
 const {getDb, search} = require('./database')
@@ -28,9 +31,37 @@ bot.on('text', async (ctx) => {
   }
 })
 
-bot.on('photo', ctx => {
-  ctx.update.message.caption
-  ctx.update.message.photo
+bot.on('photo', async ctx => {
+  //todo try
+  const db = getDb(ctx.update.message.chat.username)
+
+  if (!db) {
+    return
+  }
+
+  await db.post({
+    _attachments: {
+      'myattachment.txt': {
+        content_type: 'text/plain',
+        data: 'aGVsbG8gd29ybGQ='
+      }
+    },
+    // text,
+    // tags,
+    createdAt: new Date()
+  })
+
+
+  //todo ask for caption if missing
+  const photo = await ctx.tg.getFileLink(ctx.update.message.photo[1].file_id)//todo get biggest file
+
+  const file = fs.createWriteStream('./photo.txt')
+  https.get(photo, res => {
+    res.setEncoding('base64');
+    // res.pipe(file)
+  })
+  // ctx.update.message.caption
+  // ctx.update.message.photo
   console.log()
 })
 
@@ -71,8 +102,7 @@ bot.on('callback_query', async ctx => {
           )
           break
         case
-        'save'
-        :
+        'save':
           text = pendingUpdates[id]
           tags = text.split(' ')
           await db.post({
