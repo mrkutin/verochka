@@ -3,9 +3,9 @@ PouchDB.plugin(require('pouchdb-find'))
 
 const {BOT_DB_USER, BOT_DB_PASSWORD} = process.env
 
-const getDb = dbName => {
+const DB = dbName => {
     if (!dbName) {
-        return null
+        return Promise.reject(new Error('Can\'t get a DB'))
     }
 
     const db = new PouchDB(`http://localhost:5984/${dbName}`, {
@@ -33,26 +33,41 @@ const getDb = dbName => {
         }
     })
 
-    return db
-}
+    const getTags = text => {
+        return text?.toLowerCase().split(' ') || []
+    }
 
-const search = (db, text) => {
-    const tags = text.split(' ')
-    return db.find(
-        {
-            selector: {
-                $or: [
-                    {tags: {$all: tags}},
-                    {text: {$regex: text}}
-                ]
-            },
-            sort: [{createdAt: 'desc'}],
-            limit: 5
+    return {
+        get: (id) => {
+            return db.get(id)
+        },
+
+        save: (doc) => {
+            if (!doc.tags) {
+                doc.tags = getTags(doc.text)
+            }
+            if (!doc.createdAt) {
+                doc.createdAt = new Date()
+            }
+            return db.post(doc)
+        },
+
+        search: (text) => {
+            const tags = getTags(text)
+            return db.find(
+              {
+                  selector: {
+                      $or: [
+                          {tags: {$all: tags}},
+                          {text: {$regex: text}}
+                      ]
+                  },
+                  sort: [{createdAt: 'desc'}],
+                  limit: 10
+              }
+            )
         }
-    )
+    }
 }
 
-module.exports = {
-    getDb,
-    search
-}
+module.exports = DB

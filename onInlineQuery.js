@@ -1,12 +1,7 @@
-const {getDb, search} = require("./database");
+const DB = require("./database");
 const onInlineQuery = async ctx => {
   try {
-    const db = getDb(ctx.update.inline_query.from.username)
-    if (!db) {
-      return
-    }
-
-    const records = await search(db, ctx.update.inline_query.query)
+    const records = await DB(ctx.update.inline_query.from.username).search(ctx.update.inline_query.query)
 
     if (!records.docs.length) {
       return

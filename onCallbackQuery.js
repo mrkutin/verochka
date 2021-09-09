@@ -1,12 +1,9 @@
 const {Markup} = require('telegraf')
-const {getDb, search} = require('./database')
+const DB = require('./database')
 const pendingUpdates = require('./pendingUpdates')
 const onCallbackQuery = async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
-  const db = getDb(ctx.update.callback_query.from.username)
-  if (!db) {
-    return
-  }
+  const db = DB(ctx.update.callback_query.from.username)
 
   for (const id in data) {
     try {
@@ -22,7 +19,7 @@ const onCallbackQuery = async ctx => {
           }
           break
         case 'find':
-          const records = await search(db, pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
+          const records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
@@ -52,12 +49,8 @@ const onCallbackQuery = async ctx => {
           break
         case
         'save':
-          const text = pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text
-          const tags = text?.split(' ') || []
-          await db.post({
-            text,
-            tags,
-            createdAt: new Date()
+          await db.save({
+            text: pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text
           })
           ctx.reply('Записала!')
           break
