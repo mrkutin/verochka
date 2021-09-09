@@ -3,23 +3,22 @@ const {getDb, search} = require('./database')
 const pendingUpdates = require('./pendingUpdates')
 const onCallbackQuery = async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
+  const db = getDb(ctx.update.callback_query.message.chat.username)
+  if (!db) {
+    return
+  }
+
   for (const id in data) {
     try {
-      const db = getDb(ctx.update.callback_query.message.chat.username)
-      if (!db) {
-        continue
-      }
-
       switch (data[id]) {
         case 'show':
-          const doc = await db.get(id, {attachments: true})
-          if (doc._attachments) {
-            const fileName = Object.keys(doc._attachments)[0]
-            const attachment = doc._attachments[fileName]
-            //todo
-            ctx.tg.sendPhoto(ctx.update.callback_query.message.chat.id, 'AgACAgIAAxkBAAIB7WE5xUwUifzgJu9qHIR2JGXK_VAkAALsuDEbDcXJSetNSIz3C0xGAQADAgADbQADIAQ')
-          } else {
-            ctx.reply(doc.text)
+          const doc = await db.get(id)
+          switch (doc.content_type) {
+            case 'image/png':
+              await ctx.tg.sendPhoto(ctx.update.callback_query.message.chat.id, doc.file_id)
+              break
+            default:
+              await ctx.reply(doc.text)
           }
           break
         case 'find':
@@ -32,13 +31,10 @@ const onCallbackQuery = async ctx => {
 
           const inlineButtons = records.docs.map(doc => {
             let icon = '📄'
-            if (doc._attachments) {
-              const attachment = doc._attachments[Object.keys(doc._attachments)[0]]
-              switch (attachment.content_type) {
-                case 'image/png':
-                  icon = '🏞'
-                  break
-              }
+            switch (doc.content_type) {
+              case 'image/png':
+                icon = '🏞'
+                break
             }
 
             return [{
