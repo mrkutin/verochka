@@ -22,7 +22,7 @@ const onCallbackQuery = async ctx => {
           }
           break
         case 'find':
-          const records = await search(db, pendingUpdates[id])
+          const records = await search(db, pendingUpdates[id].message.text)
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
@@ -52,7 +52,7 @@ const onCallbackQuery = async ctx => {
           break
         case
         'save':
-          const text = pendingUpdates[id]
+          const text = pendingUpdates[id].message.text
           const tags = text?.split(' ') || []
           await db.post({
             text,

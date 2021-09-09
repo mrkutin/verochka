@@ -5,7 +5,7 @@ const onText = async (ctx) => {
   try {
     const {update} = ctx
     const {update_id} = update
-    pendingUpdates[update_id] = update.message.text
+    pendingUpdates[update_id] = update
     ctx.reply('Что с этим делать?',
       Markup
         .inlineKeyboard([
