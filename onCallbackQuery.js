@@ -5,9 +5,39 @@ const onCallbackQuery = async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
   const db = DB(ctx.update.callback_query.from.username)
 
+  const find = async (id, foundMessage, verbToApply) => {
+    const records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
+
+    if (!records.docs.length) {
+      ctx.reply('Я ничего не нашла')
+      return
+    }
+
+    const inlineButtons = records.docs.map(doc => {
+      let icon = '📄'
+      switch (doc.content_type) {
+        case 'image/png':
+          icon = '🏞'
+          break
+      }
+
+      return [{
+        text: `${icon} ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
+        callback_data: JSON.stringify({[doc._id]: verbToApply})
+      }]
+    })
+
+    ctx.reply(foundMessage,
+      Markup
+        .inlineKeyboard(inlineButtons)
+        .oneTime()
+        .resize()
+    )
+  }
+
   for (const id in data) {
     try {
-      let records, inlineButtons, doc
+      let doc
       switch (data[id]) {
         case 'show':
           doc = await db.get(id)
@@ -20,33 +50,7 @@ const onCallbackQuery = async ctx => {
           }
           break
         case 'find':
-          records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
-
-          if (!records.docs.length) {
-            ctx.reply('Я ничего не нашла')
-            return
-          }
-
-          inlineButtons = records.docs.map(doc => {
-            let icon = '📄'
-            switch (doc.content_type) {
-              case 'image/png':
-                icon = '🏞'
-                break
-            }
-
-            return [{
-              text: `${icon} ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
-              callback_data: JSON.stringify({[doc._id]: 'show'})
-            }]
-          })
-
-          ctx.reply('Вот, что я нашла:',
-            Markup
-              .inlineKeyboard(inlineButtons)
-              .oneTime()
-              .resize()
-          )
+          await find(id, 'Вот, что я нашла:', 'show')
           break
         case 'save':
           await db.save({
@@ -55,33 +59,7 @@ const onCallbackQuery = async ctx => {
           ctx.reply('Записала!')
           break
         case 'findToRemove':
-          records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
-
-          if (!records.docs.length) {
-            ctx.reply('Я ничего не нашла')
-            return
-          }
-
-          inlineButtons = records.docs.map(doc => {
-            let icon = '📄'
-            switch (doc.content_type) {
-              case 'image/png':
-                icon = '🏞'
-                break
-            }
-
-            return [{
-              text: `${icon} ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
-              callback_data: JSON.stringify({[doc._id]: 'remove'})
-            }]
-          })
-
-          ctx.reply('Что удалить?',
-            Markup
-              .inlineKeyboard(inlineButtons)
-              .oneTime()
-              .resize()
-          )
+          await find(id, 'Что удалить?', 'remove')
           break
         case 'remove':
           doc = await db.get(id)
