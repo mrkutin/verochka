@@ -4,7 +4,6 @@ const {Telegraf, Markup} = require('telegraf')
 const bot = new Telegraf(BOT_TOKEN)
 
 const https = require('https')
-const fs = require('fs')
 
 const pendingUpdates = {}
 
@@ -33,32 +32,35 @@ bot.on('text', async (ctx) => {
 
 bot.on('photo', async ctx => {
   //todo try
-  const db = getDb(ctx.update.message.chat.username)
-
-  if (!db) {
-    return
-  }
-
-  await db.post({
-    _attachments: {
-      'myattachment.txt': {
-        content_type: 'text/plain',
-        data: 'aGVsbG8gd29ybGQ='
-      }
-    },
-    // text,
-    // tags,
-    createdAt: new Date()
-  })
-
-
   //todo ask for caption if missing
-  const photo = await ctx.tg.getFileLink(ctx.update.message.photo[1].file_id)//todo get biggest file
+  const photoURL = await ctx.tg.getFileLink(ctx.update.message.photo[1].file_id)//todo get biggest file
 
-  const file = fs.createWriteStream('./photo.txt')
-  https.get(photo, res => {
-    res.setEncoding('base64');
-    // res.pipe(file)
+  https.get(photoURL, res => {
+    let photo = ''
+    res.setEncoding('base64')
+
+    res.on('data', data => photo += data)
+    res.on('end', async () => {
+      const db = getDb(ctx.update.message.chat.username)
+      if (!db) {
+        return
+      }
+
+      const text = ctx.update.message.caption
+      const tags = text?.split(' ') || []
+
+      await db.post({
+        _attachments: {
+          'photo.png': {
+            content_type: 'image/png',
+            data: photo
+          }
+        },
+        text,
+        tags,
+        createdAt: new Date()
+      })
+    })
   })
   // ctx.update.message.caption
   // ctx.update.message.photo
@@ -76,8 +78,15 @@ bot.on('callback_query', async ctx => {
 
       switch (data[id]) {
         case 'show':
-          const doc = await db.get(id)
-          ctx.reply(doc.text)
+          const doc = await db.get(id, {attachments: true})
+          if (doc._attachments) {
+            const fileName = Object.keys(doc._attachments)[0]
+            const attachment = doc._attachments[fileName]
+            //todo
+            ctx.tg.sendPhoto(ctx.update.callback_query.message.chat.id, 'AgACAgIAAxkBAAIB7WE5xUwUifzgJu9qHIR2JGXK_VAkAALsuDEbDcXJSetNSIz3C0xGAQADAgADbQADIAQ')
+          } else {
+            ctx.reply(doc.text)
+          }
           break
         case 'find':
           const records = await search(db, pendingUpdates[id])
@@ -88,8 +97,18 @@ bot.on('callback_query', async ctx => {
           }
 
           const inlineButtons = records.docs.map(doc => {
+            let icon = '📄'
+            if (doc._attachments) {
+              const attachment = doc._attachments[Object.keys(doc._attachments)[0]]
+              switch (attachment.content_type) {
+                case 'image/png':
+                  icon = '🏞'
+                    break
+              }
+            }
+
             return [{
-              text: `📄 ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
+              text: `${icon} ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
               callback_data: JSON.stringify({[doc._id]: 'show'})
             }]
           })
@@ -103,8 +122,8 @@ bot.on('callback_query', async ctx => {
           break
         case
         'save':
-          text = pendingUpdates[id]
-          tags = text.split(' ')
+          const text = pendingUpdates[id]
+          const tags = text?.split(' ') || []
           await db.post({
             text,
             tags,
@@ -135,6 +154,7 @@ bot.on('inline_query', async ctx => {
     }
 
     const results = records.docs.map((record, idx) => {
+      //todo images
       return {
         id: idx,
         type: 'article',
