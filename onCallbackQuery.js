@@ -3,7 +3,7 @@ const {getDb, search} = require('./database')
 const pendingUpdates = require('./pendingUpdates')
 const onCallbackQuery = async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
-  const db = getDb(ctx.update.callback_query.message.chat.username)
+  const db = getDb(ctx.update.callback_query.from.username)
   if (!db) {
     return
   }
