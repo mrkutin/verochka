@@ -15,14 +15,14 @@ const onCallbackQuery = async ctx => {
           const doc = await db.get(id)
           switch (doc.content_type) {
             case 'image/png':
-              await ctx.tg.sendPhoto(ctx.update.callback_query.message.chat.id, doc.file_id)
+              await ctx.tg.sendPhoto(ctx.update.callback_query.message.from.id, doc.file_id)
               break
             default:
               await ctx.reply(doc.text)
           }
           break
         case 'find':
-          const records = await search(db, pendingUpdates[id].message.text)
+          const records = await search(db, pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
@@ -52,7 +52,7 @@ const onCallbackQuery = async ctx => {
           break
         case
         'save':
-          const text = pendingUpdates[id].message.text
+          const text = pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text
           const tags = text?.split(' ') || []
           await db.post({
             text,
@@ -65,7 +65,7 @@ const onCallbackQuery = async ctx => {
     } catch (err) {
       console.error(err)
     } finally {
-      delete pendingUpdates[id]
+      delete pendingUpdates(ctx.update.callback_query.from.username).unset(id)
     }
   }
 }
