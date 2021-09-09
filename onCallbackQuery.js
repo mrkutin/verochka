@@ -16,6 +16,7 @@ const onCallbackQuery = async ctx => {
     const inlineButtons = records.docs.map(doc => {
       let icon = '📄'
       switch (doc.content_type) {
+        //todo other types
         case 'image/png':
           icon = '🏞'
           break
