@@ -15,7 +15,7 @@ const onCallbackQuery = async ctx => {
           const doc = await db.get(id)
           switch (doc.content_type) {
             case 'image/png':
-              await ctx.tg.sendPhoto(ctx.update.callback_query.message.from.id, doc.file_id)
+              await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
               break
             default:
               await ctx.reply(doc.text)
