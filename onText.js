@@ -10,9 +10,12 @@ const onText = async (ctx) => {
       Markup
         .inlineKeyboard([
           [
-            {text: '🔍 Найти', callback_data: JSON.stringify({[update_id]: 'find'})},
-            {text: '✏️ Записать', callback_data: JSON.stringify({[update_id]: 'save'})}
+            {text: '✏️ Записать', callback_data: JSON.stringify({[update_id]: 'save'})},
+            {text: '✂️ Удалить', callback_data: JSON.stringify({[update_id]: 'findToRemove'})}
           ],
+          [
+            {text: '🔍 Найти', callback_data: JSON.stringify({[update_id]: 'find'})},
+          ]
         ])
         .oneTime()
         .resize()

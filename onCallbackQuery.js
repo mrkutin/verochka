@@ -7,9 +7,10 @@ const onCallbackQuery = async ctx => {
 
   for (const id in data) {
     try {
+      let records, inlineButtons, doc
       switch (data[id]) {
         case 'show':
-          const doc = await db.get(id)
+          doc = await db.get(id)
           switch (doc.content_type) {
             case 'image/png':
               await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
@@ -19,14 +20,14 @@ const onCallbackQuery = async ctx => {
           }
           break
         case 'find':
-          const records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
+          records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
 
           if (!records.docs.length) {
             ctx.reply('Я ничего не нашла')
             return
           }
 
-          const inlineButtons = records.docs.map(doc => {
+          inlineButtons = records.docs.map(doc => {
             let icon = '📄'
             switch (doc.content_type) {
               case 'image/png':
@@ -47,12 +48,45 @@ const onCallbackQuery = async ctx => {
               .resize()
           )
           break
-        case
-        'save':
+        case 'save':
           await db.save({
             text: pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text
           })
           ctx.reply('Записала!')
+          break
+        case 'findToRemove':
+          records = await db.search(pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text)
+
+          if (!records.docs.length) {
+            ctx.reply('Я ничего не нашла')
+            return
+          }
+
+          inlineButtons = records.docs.map(doc => {
+            let icon = '📄'
+            switch (doc.content_type) {
+              case 'image/png':
+                icon = '🏞'
+                break
+            }
+
+            return [{
+              text: `${icon} ${doc.text} от ${new Date(doc.createdAt).toLocaleDateString()}`,
+              callback_data: JSON.stringify({[doc._id]: 'remove'})
+            }]
+          })
+
+          ctx.reply('Что удалить?',
+            Markup
+              .inlineKeyboard(inlineButtons)
+              .oneTime()
+              .resize()
+          )
+          break
+        case 'remove':
+          doc = await db.get(id)
+          await db.remove(doc)
+          ctx.reply('Удалила!')
           break
       }
     } catch (err) {

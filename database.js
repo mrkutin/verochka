@@ -42,6 +42,10 @@ const DB = dbName => {
             return db.get(id)
         },
 
+        remove: (id) => {
+            return db.remove(id)
+        },
+
         save: (doc) => {
             if (!doc.tags) {
                 doc.tags = getTags(doc.text)
