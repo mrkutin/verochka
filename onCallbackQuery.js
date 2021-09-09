@@ -86,7 +86,8 @@ const onCallbackQuery = async ctx => {
         case 'remove':
           doc = await db.get(id)
           await db.remove(doc)
-          ctx.reply('Удалила!')
+          await ctx.reply('Удалила:')
+          ctx.reply(doc.text)
           break
       }
     } catch (err) {
