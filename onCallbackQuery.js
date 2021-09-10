@@ -20,7 +20,13 @@ const onCallbackQuery = async ctx => {
         switch (type) {
           //todo other types
           case 'image':
-            icon = '🏞'
+            icon = '📷'
+            break
+          case 'audio':
+            icon = '🎙'
+            break
+          case 'video':
+            icon = '📹'
             break
           case 'application':
             icon = '🗞'
@@ -56,8 +62,18 @@ const onCallbackQuery = async ctx => {
               // this is a doc
               await ctx.tg.sendDocument(ctx.update.callback_query.from.id, doc.file_id)
             } else {
-              //this is a pic
-              await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
+              const [type] = doc.content_type.split('/')
+              switch(type) {
+                case 'image':
+                  await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
+                  break
+                case 'audio':
+                  await ctx.tg.sendAudio(ctx.update.callback_query.from.id, doc.file_id)
+                  break
+                case 'video':
+                  await ctx.tg.sendVideo(ctx.update.callback_query.from.id, doc.file_id)
+                  break
+              }
             }
           } else {
             // this is a text
