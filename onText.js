@@ -1,5 +1,5 @@
 const {Markup} = require('telegraf')
-const pendingUpdates = require('./pendingUpdates')
+const {pendingUpdates} = require('./maps')
 
 const onText = async (ctx) => {
   try {

@@ -1,6 +1,6 @@
 const {Markup} = require('telegraf')
 const DB = require('./database')
-const pendingUpdates = require('./pendingUpdates')
+const {pendingUpdates} = require('./maps')
 const onCallbackQuery = async ctx => {
   const data = JSON.parse(ctx.update?.callback_query?.data)
   const db = DB(ctx.update.callback_query.from.username)
