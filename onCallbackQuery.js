@@ -23,9 +23,11 @@ const onCallbackQuery = async ctx => {
             icon = '📷'
             break
           case 'audio':
+          case 'voice':
             icon = '🎙'
             break
           case 'video':
+          case 'video_note':
             icon = '📹'
             break
           case 'application':
@@ -70,8 +72,14 @@ const onCallbackQuery = async ctx => {
                 case 'audio':
                   await ctx.tg.sendAudio(ctx.update.callback_query.from.id, doc.file_id)
                   break
+                case 'voice':
+                  await ctx.tg.sendVoice(ctx.update.callback_query.from.id, doc.file_id)
+                  break
                 case 'video':
                   await ctx.tg.sendVideo(ctx.update.callback_query.from.id, doc.file_id)
+                  break
+                case 'video_note':
+                  await ctx.tg.sendVideoNote(ctx.update.callback_query.from.id, doc.file_id)
                   break
               }
             }
