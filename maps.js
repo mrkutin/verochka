@@ -11,7 +11,7 @@ const pendingRename = username => {
       return pendingRenameData[username]
     },
     unset: () => {
-      pendingUpdatesData[username] = null
+      pendingRenameData[username] = null
     }
   }
 }

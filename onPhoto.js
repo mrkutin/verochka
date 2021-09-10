@@ -1,12 +1,8 @@
 const DB = require('./database')
+const {pendingRename} = require("./maps");
 
 const onPhoto = async ctx => {
   try {
-    if (!ctx.update.message.caption) {
-      ctx.reply('Нужно указать название для картинки, попробуйте ещё раз')
-      return
-    }
-
     const largestPhoto = ctx.update.message.photo.reduce((acc, photo) => {
       if (photo.file_size > acc.file_size) {
         return photo
@@ -14,13 +10,19 @@ const onPhoto = async ctx => {
       return acc
     }, {file_size: 0})
 
-    await DB(ctx.update.message.from.username).save(
+    const doc = await DB(ctx.update.message.from.username).save(
       {
         text: ctx.update.message.caption,
         content_type: 'image/png',
         file_id: largestPhoto.file_id
       }
     )
+
+    if (!ctx.update.message.caption) {
+      ctx.reply('Придумайте название для этого фото, чтобы его потом можно было найти')
+      pendingRename(ctx.update.message.from.username).set(doc.id)
+      return
+    }
 
     ctx.reply('Сохранила!')
   } catch (err) {

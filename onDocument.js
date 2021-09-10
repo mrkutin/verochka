@@ -1,13 +1,9 @@
 const DB = require('./database')
+const {pendingRename} = require('./maps')
 
 const onDocument = async ctx => {
   try {
-    if (!ctx.update.message.caption) {
-      ctx.reply('Нужно указать название для документа, попробуйте ещё раз')
-      return
-    }
-
-    await DB(ctx.update.message.from.username).save(
+    const doc = await DB(ctx.update.message.from.username).save(
       {
         text: ctx.update.message.caption,
         file_id: ctx.update.message.document.file_id,
@@ -15,6 +11,12 @@ const onDocument = async ctx => {
         file_name: ctx.update.message.document.file_name
       }
     )
+
+    if (!ctx.update.message.caption) {
+      ctx.reply('Придумайте название для этого документа, чтобы его потом можно было найти')
+      pendingRename(ctx.update.message.from.username).set(doc.id)
+      return
+    }
 
     ctx.reply('Сохранила!')
   } catch (err) {
