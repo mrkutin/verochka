@@ -11,7 +11,7 @@ const onText = async (ctx) => {
         .inlineKeyboard([
           [
             {text: '✏️ Записать', callback_data: JSON.stringify({[update_id]: 'save'})},
-            {text: '✂️ Удалить', callback_data: JSON.stringify({[update_id]: 'findToRemove'})}
+            {text: '🗑 Удалить', callback_data: JSON.stringify({[update_id]: 'findToRemove'})}
           ],
           [
             {text: '🔍 Найти', callback_data: JSON.stringify({[update_id]: 'find'})},

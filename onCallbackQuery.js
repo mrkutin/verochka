@@ -15,11 +15,20 @@ const onCallbackQuery = async ctx => {
 
     const inlineButtons = records.docs.map(doc => {
       let icon = '📄'
-      switch (doc.content_type) {
-        //todo other types
-        case 'image/png':
-          icon = '🏞'
-          break
+      if(doc.content_type) {
+        const [type] = doc.content_type.split('/')
+        switch (type) {
+          //todo other types
+          case 'image':
+            icon = '🏞'
+            break
+          case 'application':
+            icon = '🗞'
+            break
+          case 'multipart':
+            icon = '🗄'
+            break
+        }
       }
 
       return [{
@@ -42,12 +51,17 @@ const onCallbackQuery = async ctx => {
       switch (data[id]) {
         case 'show':
           doc = await db.get(id)
-          switch (doc.content_type) {
-            case 'image/png':
+          if(doc.content_type) {
+            if (doc.file_name) {
+              // this is a doc
+              await ctx.tg.sendDocument(ctx.update.callback_query.from.id, doc.file_id)
+            } else {
+              //this is a pic
               await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
-              break
-            default:
-              await ctx.reply(doc.text)
+            }
+          } else {
+            // this is a text
+            await ctx.reply(doc.text)
           }
           break
         case 'find':
