@@ -17,6 +17,8 @@ const bot = new Telegraf(BOT_TOKEN)
 //   console.log()
 // })
 
+bot.start((ctx) => ctx.reply('Меня зовут Верочка. Просто пришлите или перешлите мне любой контент и я найду его когда вам будет нужно.'))
+
 bot.on('text', onText)
 bot.on('photo', onPhoto)
 bot.on('audio', onAudio)
@@ -25,7 +27,7 @@ bot.on('video', onVideo)
 bot.on('video_note', onVideoNote)
 bot.on('document', onDocument)
 bot.on('callback_query', onCallbackQuery)
-bot.on('inline_query', onInlineQuery)
+// bot.on('inline_query', onInlineQuery)
 
 bot.launch()
 // Enable graceful stop

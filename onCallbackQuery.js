@@ -16,7 +16,7 @@ const onCallbackQuery = async ctx => {
     const inlineButtons = records.docs.map(doc => {
       let icon = '📄'
       switch (doc.type) {
-        case 'image':
+        case 'photo':
           icon = '📷'
           break
         case 'audio':
@@ -62,7 +62,7 @@ const onCallbackQuery = async ctx => {
             case 'document':
               await ctx.tg.sendDocument(ctx.update.callback_query.from.id, doc.file_id)
               break
-            case 'image':
+            case 'photo':
               await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
               break
             case 'audio':
