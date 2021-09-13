@@ -1,14 +1,14 @@
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
 
-const {BOT_DB_USER, BOT_DB_PASSWORD} = process.env
+const {BOT_DB_HOST, BOT_DB_USER, BOT_DB_PASSWORD} = process.env
 
 const DB = dbName => {
     if (!dbName) {
         return Promise.reject(new Error('Can\'t get a DB'))
     }
 
-    const db = new PouchDB(`http://localhost:5984/${dbName}`, {
+    const db = new PouchDB(`http://${BOT_DB_HOST || 'localhost'}:5984/${dbName}`, {
         auth: {
             username: BOT_DB_USER,
             password: BOT_DB_PASSWORD
