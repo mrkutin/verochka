@@ -14,7 +14,8 @@ const onPhoto = async ctx => {
       {
         text: ctx.update.message.caption,
         content_type: 'image/png',
-        file_id: largestPhoto.file_id
+        file_id: largestPhoto.file_id,
+        type: 'photo'
       }
     )
 

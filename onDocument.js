@@ -8,7 +8,8 @@ const onDocument = async ctx => {
         text: ctx.update.message.caption,
         file_id: ctx.update.message.document.file_id,
         content_type: ctx.update.message.document.mime_type,
-        file_name: ctx.update.message.document.file_name
+        file_name: ctx.update.message.document.file_name,
+        type: 'document'
       }
     )
 

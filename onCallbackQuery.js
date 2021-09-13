@@ -15,28 +15,24 @@ const onCallbackQuery = async ctx => {
 
     const inlineButtons = records.docs.map(doc => {
       let icon = '📄'
-      if(doc.content_type) {
-        const [type] = doc.content_type.split('/')
-        switch (type) {
-          //todo other types
-          case 'image':
-            icon = '📷'
-            break
-          case 'audio':
-          case 'voice':
-            icon = '🎙'
-            break
-          case 'video':
-          case 'video_note':
-            icon = '📹'
-            break
-          case 'application':
-            icon = '🗞'
-            break
-          case 'multipart':
-            icon = '🗄'
-            break
-        }
+      switch (doc.type) {
+        case 'image':
+          icon = '📷'
+          break
+        case 'audio':
+        case 'voice':
+          icon = '🎙'
+          break
+        case 'video':
+        case 'video_note':
+          icon = '📹'
+          break
+        case 'application':
+          icon = '🗞'
+          break
+        case 'multipart':
+          icon = '🗄'
+          break
       }
 
       return [{
@@ -59,33 +55,28 @@ const onCallbackQuery = async ctx => {
       switch (data[id]) {
         case 'show':
           doc = await db.get(id)
-          if(doc.content_type) {
-            if (doc.file_name) {
-              // this is a doc
+          switch(doc.type) {
+            case 'text':
+              await ctx.reply(doc.text)
+              break
+            case 'document':
               await ctx.tg.sendDocument(ctx.update.callback_query.from.id, doc.file_id)
-            } else {
-              const [type] = doc.content_type.split('/')
-              switch(type) {
-                case 'image':
-                  await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
-                  break
-                case 'audio':
-                  await ctx.tg.sendAudio(ctx.update.callback_query.from.id, doc.file_id)
-                  break
-                case 'voice':
-                  await ctx.tg.sendVoice(ctx.update.callback_query.from.id, doc.file_id)
-                  break
-                case 'video':
-                  await ctx.tg.sendVideo(ctx.update.callback_query.from.id, doc.file_id)
-                  break
-                case 'video_note':
-                  await ctx.tg.sendVideoNote(ctx.update.callback_query.from.id, doc.file_id)
-                  break
-              }
-            }
-          } else {
-            // this is a text
-            await ctx.reply(doc.text)
+              break
+            case 'image':
+              await ctx.tg.sendPhoto(ctx.update.callback_query.from.id, doc.file_id)
+              break
+            case 'audio':
+              await ctx.tg.sendAudio(ctx.update.callback_query.from.id, doc.file_id)
+              break
+            case 'voice':
+              await ctx.tg.sendVoice(ctx.update.callback_query.from.id, doc.file_id)
+              break
+            case 'video':
+              await ctx.tg.sendVideo(ctx.update.callback_query.from.id, doc.file_id)
+              break
+            case 'video_note':
+              await ctx.tg.sendVideoNote(ctx.update.callback_query.from.id, doc.file_id)
+              break
           }
           break
         case 'find':
@@ -93,7 +84,8 @@ const onCallbackQuery = async ctx => {
           break
         case 'save':
           await db.save({
-            text: pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text
+            text: pendingUpdates(ctx.update.callback_query.from.username).get(id).message.text,
+            type: 'text'
           })
           ctx.reply('Записала!')
           break

@@ -7,7 +7,8 @@ const onVoice = async ctx => {
       {
         text: ctx.update.message.caption,
         content_type: 'voice/mpeg3',
-        file_id: ctx.update.message.voice.file_id
+        file_id: ctx.update.message.voice.file_id,
+        type: 'voice'
       }
     )
 

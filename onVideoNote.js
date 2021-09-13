@@ -7,7 +7,8 @@ const onVideoNote = async ctx => {
       {
         text: ctx.update.message.caption,
         content_type: 'video_note/mp4',
-        file_id: ctx.update.message.video_note.file_id
+        file_id: ctx.update.message.video_note.file_id,
+        type: 'video_note'
       }
     )
 

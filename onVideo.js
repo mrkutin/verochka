@@ -7,7 +7,8 @@ const onVideo = async ctx => {
       {
         text: ctx.update.message.caption,
         content_type: 'video/mp4',
-        file_id: ctx.update.message.video.file_id
+        file_id: ctx.update.message.video.file_id,
+        type: 'video'
       }
     )
 
