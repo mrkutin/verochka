@@ -10,8 +10,10 @@ services:
       - BOT_DB_PASSWORD
     depends_on:
       - couchdb
+    restart: always
   couchdb:
     image: couchdb:latest
     environment:
       - COUCHDB_USER
       - COUCHDB_PASSWORD
+    restart: always
