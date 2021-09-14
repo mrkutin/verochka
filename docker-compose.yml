@@ -17,3 +17,6 @@ services:
       - COUCHDB_USER
       - COUCHDB_PASSWORD
     restart: always
+    ports:
+      - "5984:5984"
+
